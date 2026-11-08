@@ -82,13 +82,19 @@ class ProductRepositery {
     return rows[0] || null;
   }
   static async DeleteProductById(id) {
+    // Updated: Return actual product columns so the delete query matches the products schema.
     const query = `
     DELETE FROM products
     WHERE id=$1
-    RETURNING id ,category,title,slug
+    RETURNING id, category_id, title, slug
     `;
     const { rows } = await db.query(query, [id]);
     return rows[0]||null;
+  }
+
+  // Added: Match the controller's lower-camel-case method while preserving the existing method name.
+  static async deleteProductById(id) {
+    return this.DeleteProductById(id);
   }
 }
 module.exports = ProductRepositery;

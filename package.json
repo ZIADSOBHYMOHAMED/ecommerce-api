@@ -17,10 +17,10 @@
   "name": "express-postegres-api-the-first-real-project1",
   "version": "1.0.0",
   "description": "",
-  "main": "server.js",
+  "main": "src/server.js",
   "scripts": {
     "migrate": "node src/database/migration.js",
-    "start": "node server.js",
+    "start": "node src/server.js",
     "dev": "nodemon src/server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },

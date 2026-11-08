@@ -43,7 +43,8 @@ exports.updateCategory = catchAsync(async (req, res, next) => {
   const { id } = req.params;
   const { category_name, description, slug } = req.body;
 
-  if (!category_name || description || slug)
+  // Updated: Reject only an empty patch; optional fields can be updated independently.
+  if (category_name === undefined && description === undefined && slug === undefined)
     return next(new AppError("please provide field to update", 400));
 
   const updatedData = {};

@@ -3,12 +3,14 @@ const catchAsync = require("../utils/catchAsync.util");
 const CouponRepository = require("../repositories/coupon.repository");
 
 exports.createCoupon = catchAsync(async (req, res, next) => {
-  const { code, discount_type, discount_value, valid_until } = req.body;
-  code = code.trim().toUpperCase();
+  const { discount_type, discount_value, valid_until } = req.body;
+  // Updated: Normalize the request code without reassigning a const binding.
+  const code = req.body.code.trim().toUpperCase();
 
   const valiedUntilDate = new Date(valid_until);
 
-  if (valiedUntilDate <= new Date())
+  // Added: Reject invalid timestamps as well as dates that have already passed.
+  if (Number.isNaN(valiedUntilDate.getTime()) || valiedUntilDate <= new Date())
     return next(
       new AppError(
         "in valied  valied_until  date its old  itmust be in the future !",
@@ -35,7 +37,8 @@ exports.createCoupon = catchAsync(async (req, res, next) => {
       },
     });
   } catch (error) {
-    if ((error.code = "23505")) {
+    // Updated: Compare the PostgreSQL error code so unrelated failures remain server errors.
+    if (error.code === "23505") {
       return next(new AppError("coupon code alreasy existis", 409)); //conflict for duplicate a unique value
     }
     throw error;
@@ -145,10 +148,10 @@ exports.validateCoupon = catchAsync(async (req, res, next) => {
 
   if (!coupon) return next(new AppError("coupon not found ", 404));
 
-  if (!coupon.is_active) return next(new AppError("coupon is not active "));
+  if (!coupon.is_active) return next(new AppError("coupon is not active", 400));
 
   if (new Date(coupon.valid_until) <= new Date())
-    return next(new AppError("coupon is not valid now !"));
+    return next(new AppError("coupon is not valid now", 400));
 
   res.status(200).json({
     success: true,

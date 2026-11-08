@@ -27,9 +27,11 @@ const runMigrations = async () => {
     console.log('🚀 All Migrations Executed Successfully!');
   } catch (error) {
     console.error('❌ Migration Failed:', error.message);
+    // Updated: Return a failing process status so automation does not treat a failed migration as successful.
+    process.exitCode = 1;
   } finally {
-    // 4. إنهاء الاتصال بعد الـ Migration
-    process.exit();
+    // Updated: Close the PostgreSQL pool cleanly after migration work completes.
+    await db.end();
   }
 };
 

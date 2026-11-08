@@ -33,7 +33,15 @@ class CategoryRepository {
   }
 
   static async updateCategoryById(id, updatedData) {
+    // Added: Limit dynamic SQL identifiers to columns supported by category updates.
+    const allowedFields = ["category_name", "slug", "description"];
     const keys = Object.keys(updatedData);
+    const invalidFields = keys.filter((key) => !allowedFields.includes(key));
+
+    if (invalidFields.length > 0) {
+      throw new Error("Invalid category update fields");
+    }
+
     if (keys.length === 0) return await this.findCategoryById(id);
 
     const setClauses = keys.map((key, index) => `${key} = $${index + 1}`);

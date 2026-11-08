@@ -21,7 +21,15 @@ const protect = async (req, res, next) => {
       });
     }
 
-    const decoded = verifyToken(token);
+    let decoded;
+    try {
+      decoded = verifyToken(token);
+    } catch (error) {
+      return res.status(401).json({
+        status: "fail",
+        message: "Invalid or expired token",
+      });
+    }
 
     const userId = decoded.id || decoded.userId;
     const currentUser = await UserRepository.findUserById(userId);
@@ -33,14 +41,20 @@ const protect = async (req, res, next) => {
       });
     }
 
+    // Added: Prevent disabled accounts from continuing to use previously issued tokens.
+    if (!currentUser.is_active) {
+      return res.status(401).json({
+        status: "fail",
+        message: "The user account is inactive",
+      });
+    }
+
     req.user = currentUser;
 
     next();
   } catch (error) {
-    return res.status(401).json({
-      status: "fail",
-      message: "Invalid or expired token",
-    });
+    // Updated: Let repository/database failures reach Express error handling instead of disguising them as bad tokens.
+    return next(error);
   }
 };
 

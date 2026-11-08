@@ -20,7 +20,8 @@ class CouponRepository {
   }
   static async createCoupon({ code, discountType, discountValue, validUntil }) {
     const query = `
-    INSERT INTO coupons 
+    -- Updated: Use PostgreSQL's required parenthesized INSERT column list.
+    INSERT INTO coupons (
     code,
     discount_type,
     discount_value,

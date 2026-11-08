@@ -18,24 +18,24 @@ exports.createOrder = catchAsync(async (req, res, next) => {
     );
   }
 
-  const cartItems = await CartRepository.findCartByUserId(user_id);
-  if (!cartItems || cartItems.length === 0) {
+  // Updated: Check that the customer has cart lines before starting order creation.
+  const cartItems = await CartRepository.findCartItemsByUserId(user_id);
+  if (cartItems.length === 0) {
     return next(new AppError("Your cart is empty", 400));
   }
-
-  const total_amount = cartItems.reduce((acc, item) => {
-    return acc + item.price * item.quantity;
-  }, 0);
 
   const initialStatus = "pending";
 
   const order = await OrderRepository.createOrder({
     userId: user_id,
     addressId: address_id,
-    totalAmount: total_amount,
     status: initialStatus,
-    items: cartItems,
   });
+
+  // Added: Handle a cart consumed by another checkout after the initial empty-cart check.
+  if (!order) {
+    return next(new AppError("Your cart is empty", 400));
+  }
 
   res.status(201).json({
     success: true,
@@ -99,7 +99,13 @@ exports.updateOrder = catchAsync(async (req, res, next) => {
   const updatedOrder = await OrderRepository.updateOrdersByIdAndAddressId(
     id,
     address_id,
+    user_id,
   );
+
+  // Added: Report a concurrent status/ownership change instead of claiming the update succeeded.
+  if (!updatedOrder) {
+    return next(new AppError("Order could not be updated", 409));
+  }
 
   res.status(200).json({
     success: true,

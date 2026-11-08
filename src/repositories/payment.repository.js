@@ -16,7 +16,8 @@ const createPayment = async ({ orderId, userId, paymentMethod }) => {
         FROM orders o
         WHERE o.id = $1
           AND o.user_id = $2
-          AND o.status IN ('pending', 'confirmed')
+          -- Updated: Only allow a status that the orders table CHECK constraint supports.
+          AND o.status = 'pending'
         RETURNING
             id,
             order_id,

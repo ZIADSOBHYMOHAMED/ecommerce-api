@@ -9,30 +9,33 @@ const {
   updatePaymentStatusValidator,
 } = require("../validators/payment.validator");
 
-const protect = require("../middlewares/auth.middleware");
-
-const requireRole = require("../middlewares/role.middleware");
+// Updated: Use the authentication and authorization middleware already used by the other routes.
+const protect = require("../middlewares/protect.middleware");
+const requireRole = require("../middlewares/authorization.middleware");
+const validation = require("../middlewares/validation.middleware");
 
 const router = express.Router();
 
 router.use(protect);
 
-router.post("/", createPaymentValidator, paymentController.createPayment);
+router.post("/", createPaymentValidator, validation, paymentController.createPayment);
 
 router.get("/my-payments", paymentController.getMyPayments);
 
 router.get(
   "/order/:orderId",
   orderIdValidator,
+  validation,
   paymentController.getPaymentByOrderId,
 );
 
-router.get("/:id", paymentIdValidator, paymentController.getPaymentById);
+router.get("/:id", paymentIdValidator, validation, paymentController.getPaymentById);
 
 router.patch(
   "/:id/status",
   requireRole("admin"),
   updatePaymentStatusValidator,
+  validation,
   paymentController.updatePaymentStatus,
 );
 

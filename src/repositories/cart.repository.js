@@ -43,16 +43,15 @@ class CartRepository {
   }
 
   static async findActiveProductById(product_id) {
+    // Updated: Select only columns present in the products migration; that schema has no active flag.
     const query = `
       SELECT
         id,
         category_id,
-        product_name,
-        price,
-        is_active
+        title,
+        price
       FROM products
-      WHERE id = $1
-        AND is_active = TRUE;
+      WHERE id = $1;
     `;
 
     const { rows } = await db.query(query, [product_id]);
@@ -154,21 +153,23 @@ class CartRepository {
 
     return result.rowCount;
   }
-  //in the order.controller
-  static async findCartByUserId(user_id){
+  // Updated: Keep the order-specific cart lookup under a distinct name so it does not shadow the cart response method.
+  static async findCartItemsByUserId(user_id) {
     const query = `
-    SELECT 
-    ct.id,
-    ct.cart_id,
-    ct.product_id,
-    ct.quantity
-    FROM cart_items ct
-    LEFT JOIN carts c
-    ON ct.cart_id = c.id
-    WHERE cart.user_id=$1
-    `
-    const {rows}=await db.query(query,user_id)
-    return rows[0]|| null
+      SELECT
+        ci.id,
+        ci.cart_id,
+        ci.product_id,
+        ci.quantity,
+        p.price
+      FROM cart_items ci
+      INNER JOIN carts c ON ci.cart_id = c.id
+      INNER JOIN products p ON ci.product_id = p.id
+      WHERE c.user_id = $1
+      ORDER BY ci.id;
+    `;
+    const { rows } = await db.query(query, [user_id]);
+    return rows;
   }
 }
 

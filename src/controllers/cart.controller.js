@@ -35,11 +35,13 @@ exports.addProductToCart = catchAsync(async (req, res, next) => {
   const product = await CartRepository.findActiveProductById(product_id);
 
   if (!product) {
-    return next(new AppError("Product not found or inactive", 404));
+    // Updated: The current products schema has no inactive state to report.
+    return next(new AppError("Product not found", 404));
   }
 
+  // Updated: The repository returns the cart primary key as cart_id.
   const cartProduct = await CartRepository.addProductToCart(
-    cart.id,
+    cart.cart_id,
     product_id,
     quantity,
   );
@@ -65,8 +67,9 @@ exports.updateCartProduct = catchAsync(async (req, res, next) => {
     return next(new AppError("Cart not found", 404));
   }
 
+  // Updated: Use the cart ID field returned by findCartByUserId.
   const updatedProduct = await CartRepository.updateProductQuantity(
-    cart.id,
+    cart.cart_id,
     product_id,
     quantity,
   );
@@ -95,8 +98,9 @@ exports.removeProductFromCart = catchAsync(async (req, res, next) => {
     return next(new AppError("Cart not found", 404));
   }
 
+  // Updated: Use the cart ID field returned by findCartByUserId.
   const isDeleted = await CartRepository.deleteProductFromCart(
-    cart.id,
+    cart.cart_id,
     product_id,
   );
 
@@ -121,7 +125,8 @@ exports.clearCart = catchAsync(async (req, res, next) => {
     return next(new AppError("Cart not found", 404));
   }
 
-  await CartRepository.clearCartByCartId(cart.id);
+  // Updated: Use the cart ID field returned by findCartByUserId.
+  await CartRepository.clearCartByCartId(cart.cart_id);
 
   res.status(200).json({
     success: true,

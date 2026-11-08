@@ -1,7 +1,8 @@
 const bcrypt = require("bcrypt");
 
 const hashPassword = async (plainPassword) => {
-  const saltrounds = Number(process.env.SALT_ROUNDS);
+  // Updated: Use a safe bcrypt work factor when SALT_ROUNDS is not configured.
+  const saltrounds = Number(process.env.SALT_ROUNDS || 12);
   const hashedPassword = await bcrypt.hash(plainPassword, saltrounds);
   return hashedPassword;
 };

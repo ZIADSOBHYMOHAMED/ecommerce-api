@@ -14,13 +14,22 @@ exports.register = catchAsync(async (req, res, next) => {
 
   const passwordHash = await hashPassword(password);
 
-  const user = await UserRepository.createUser({
-    first_name,
-    last_name,
-    email,
-    passwordHash,
-    phone,
-  });
+  let user;
+  try {
+    user = await UserRepository.createUser({
+      first_name,
+      last_name,
+      email,
+      passwordHash,
+      phone,
+    });
+  } catch (error) {
+    // Added: Map concurrent duplicate-email registration attempts to a conflict response.
+    if (error.code === "23505" && error.constraint === "users_email_key") {
+      return next(new AppError("Email is already registered", 409));
+    }
+    throw error;
+  }
 
   res.status(201).json({
     status: "success",
@@ -40,6 +49,11 @@ exports.login = catchAsync(async (req, res, next) => {
 
   const user = await UserRepository.findUserByEmail(email);
   if (!user) {
+    return next(new AppError("Invalid email or password", 401));
+  }
+
+  // Added: Reject login for accounts that administrators have deactivated.
+  if (!user.is_active) {
     return next(new AppError("Invalid email or password", 401));
   }
 

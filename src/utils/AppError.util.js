@@ -1,7 +1,8 @@
 class AppError extends Error {
   constructor(message, statuscode) {
     super(message);
-    this.statuscode = statuscode;
+    // Updated: Use the property name read by the centralized handler so expected errors keep their HTTP status.
+    this.statusCode = statuscode;
     this.isOperational = true;
   }
 }

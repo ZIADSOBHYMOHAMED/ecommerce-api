@@ -9,6 +9,8 @@ is_default BOOLEAN NOT NULL DEFAULT false,
 created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
 CONSTRAINT fk_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-CREATE INDEX idx_addresses_user_id 
-ON addresses(user_id)
 );
+
+-- Added: Support the repository's address list and owner-filtered lookup queries.
+CREATE INDEX IF NOT EXISTS idx_addresses_user_id
+ON addresses(user_id);
