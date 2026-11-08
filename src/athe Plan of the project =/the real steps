@@ -1,0 +1,1394 @@
+أيوه، كده فهمت قصدك بالضبط. أنت **مش عايز Architecture مرسومة وخلاص**؛ أنت عايز **خطة تنفيذ حرفية**: كل Phase تقولك تدخل تعمل إيه، وأنشئ أنهي File، وتكتب فيه إيه، وبعد ما تخلص Entity معينة تنتقل للـController ثم Validation ثم Route ثم `app.js` في التوقيت الصح.
+
+وكمان هنقف عند **Step 15 — Testing**. مش هحط Docker ولا أي حاجة مش عارفها دلوقتي.
+
+## شكل المشروع اللي هننفذه
+
+هنمشي بالترتيب ده:
+
+```text
+Phase 1   → Project Setup
+Phase 2   → Database Connection
+Phase 3   → Database Schema / Migrations
+Phase 4   → Authentication & Authorization
+Phase 5   → Users
+Phase 6   → Categories
+Phase 7   → Products
+Phase 8   → Addresses
+Phase 9   → Cart
+Phase 10  → Orders + Transactions
+Phase 11  → Payments
+Phase 12  → Coupons
+Phase 13  → Reviews
+Phase 14  → Advanced SQL + Indexes
+Phase 15  → Testing
+```
+
+**ملاحظة مهمة:** الـ`app.js` مش هنروح نعدله كل شوية عشوائيًا. هنضيف الـroutes فيه **بعد ما نكون خلصنا الـmodule الخاص بها**.
+
+---
+
+# Phase 1 — Project Setup
+
+أول حاجة فقط نعمل الـProject.
+
+### 1. إنشاء المشروع
+
+```text
+ecommerce-postgres-api/
+```
+
+### 2. Initialize Node.js
+
+```text
+package.json
+```
+
+### 3. تثبيت الـdependencies الأساسية
+
+هنحتاج في البداية:
+
+```text
+express
+pg
+dotenv
+cors
+helmet
+bcrypt
+jsonwebtoken
+express-validator
+```
+
+ولـdevelopment:
+
+```text
+nodemon
+```
+
+### 4. إنشاء الـfolders
+
+في البداية فقط:
+
+```text
+ecommerce-postgres-api/
+│
+├── src/
+│   ├── config/
+│   ├── controllers/
+│   ├── middlewares/
+│   ├── routes/
+│   ├── services/
+│   ├── repositories/
+│   ├── validators/
+│   ├── utils/
+│   └── database/
+│
+├── .env
+├── .env.example
+├── .gitignore
+├── package.json
+└── README.md
+```
+
+### 5. الملفات
+
+```text
+src/
+├── app.js
+└── server.js
+```
+
+### 6. نعمل Basic Express Server
+
+الهدف في المرحلة دي فقط:
+
+```text
+Browser
+   ↓
+Express
+   ↓
+Server running
+```
+
+**لا Database، لا Auth، لا Products.**
+
+---
+
+# Phase 2 — PostgreSQL Connection
+
+دلوقتي ندخل على Database.
+
+### 1. إنشاء Database
+
+```text
+ecommerce_db
+```
+
+### 2. ملف Environment
+
+```text
+.env
+```
+
+نحط فيه:
+
+```text
+PORT
+NODE_ENV
+DATABASE_URL
+JWT_SECRET
+JWT_EXPIRES_IN
+```
+
+### 3. ملف:
+
+```text
+src/config/env.js
+```
+
+وظيفته:
+
+```text
+.env
+ ↓
+Environment Variables
+ ↓
+Application
+```
+
+### 4. ملف:
+
+```text
+src/config/db.js
+```
+
+وظيفته:
+
+```text
+Node.js
+   ↓
+pg
+   ↓
+PostgreSQL
+```
+
+### 5. تعديل:
+
+```text
+src/server.js
+```
+
+بحيث:
+
+```text
+Start Server
+   ↓
+Connect Database
+   ↓
+Start Express
+```
+
+### 6. Test
+
+نتأكد إن:
+
+```text
+PostgreSQL Connected ✅
+Server Running ✅
+```
+
+---
+
+# Phase 3 — Database Schema
+
+هنا **لسه مفيش Controllers ولا Routes**.
+
+هنبني Database الأول.
+
+داخل:
+
+```text
+src/database/
+```
+
+نعمل:
+
+```text
+migrations/
+seeds/
+queries/
+views/
+```
+
+---
+
+## Phase 3.1 — Users Table
+
+File:
+
+```text
+001_create_users.sql
+```
+
+نعمل:
+
+```text
+users
+```
+
+ثم نحدد:
+
+```text
+id
+first_name
+last_name
+email
+password_hash
+phone
+role
+is_active
+created_at
+updated_at
+```
+
+ونحدد:
+
+```text
+PRIMARY KEY
+UNIQUE
+NOT NULL
+CHECK
+DEFAULT
+```
+
+---
+
+## Phase 3.2 — Categories
+
+```text
+002_create_categories.sql
+```
+
+```text
+categories
+```
+
+---
+
+## Phase 3.3 — Products
+
+```text
+003_create_products.sql
+```
+
+```text
+products
+```
+
+مع:
+
+```text
+category_id
+   ↓
+categories.id
+```
+
+---
+
+## Phase 3.4 — Addresses
+
+```text
+004_create_addresses.sql
+```
+
+---
+
+## Phase 3.5 — Carts
+
+```text
+005_create_carts.sql
+```
+
+---
+
+## Phase 3.6 — Cart Items
+
+```text
+006_create_cart_items.sql
+```
+
+---
+
+## Phase 3.7 — Orders
+
+```text
+007_create_orders.sql
+```
+
+---
+
+## Phase 3.8 — Order Items
+
+```text
+008_create_order_items.sql
+```
+
+---
+
+## Phase 3.9 — Payments
+
+```text
+009_create_payments.sql
+```
+
+---
+
+## Phase 3.10 — Coupons
+
+```text
+010_create_coupons.sql
+```
+
+---
+
+## Phase 3.11 — Coupon Usages
+
+```text
+011_create_coupon_usages.sql
+```
+
+---
+
+## Phase 3.12 — Reviews
+
+```text
+012_create_reviews.sql
+```
+
+---
+
+### بعد Phase 3
+
+يكون عندنا:
+
+```text
+PostgreSQL
+│
+├── users
+├── categories
+├── products
+├── addresses
+├── carts
+├── cart_items
+├── orders
+├── order_items
+├── payments
+├── coupons
+├── coupon_usages
+└── reviews
+```
+
+**لسه مفيش API تقريبًا.**
+
+---
+
+# Phase 4 — Authentication & Authorization
+
+دلوقتي نبدأ الـBackend الحقيقي.
+
+هنعمل:
+
+```text
+src/
+├── middlewares/
+│   ├── auth.middleware.js
+│   └── role.middleware.js
+│
+├── utils/
+│   ├── jwt.js
+│   └── password.js
+```
+
+### Step 1
+
+```text
+password.js
+```
+
+مسؤول عن:
+
+```text
+hash password
+compare password
+```
+
+### Step 2
+
+```text
+jwt.js
+```
+
+مسؤول عن:
+
+```text
+generate token
+verify token
+```
+
+### Step 3
+
+```text
+auth.middleware.js
+```
+
+الـflow:
+
+```text
+Request
+ ↓
+Authorization Header
+ ↓
+JWT
+ ↓
+Verify
+ ↓
+req.user
+```
+
+### Step 4
+
+```text
+role.middleware.js
+```
+
+مثلاً:
+
+```text
+requireRole("admin")
+```
+
+---
+
+# Phase 5 — Authentication Module
+
+هنا بقى نطبق اللي أنت تقصده بالضبط.
+
+مش هنشتغل:
+
+```text
+كل Controllers
+كل Routes
+كل Validators
+```
+
+مرة واحدة.
+
+هنخلص **Module كامل** ثم نركبه في `app.js`.
+
+---
+
+## 5.1 Auth Controller
+
+```text
+src/controllers/auth.controller.js
+```
+
+يحتوي:
+
+```text
+register
+login
+logout
+getMe
+```
+
+---
+
+## 5.2 Auth Service
+
+```text
+src/services/auth.service.js
+```
+
+هنا الـBusiness Logic:
+
+```text
+register
+   ↓
+validate
+   ↓
+check email
+   ↓
+hash password
+   ↓
+create user
+   ↓
+generate token
+```
+
+---
+
+## 5.3 Auth Repository
+
+```text
+src/repositories/user.repository.js
+```
+
+هنا SQL:
+
+```text
+findUserByEmail
+findUserById
+createUser
+```
+
+---
+
+## 5.4 Auth Validator
+
+```text
+src/validators/auth.validator.js
+```
+
+مثلاً:
+
+```text
+registerValidator
+loginValidator
+```
+
+---
+
+## 5.5 Validation Middleware
+
+```text
+src/middlewares/validate.middleware.js
+```
+
+وظيفته:
+
+```text
+Validator
+ ↓
+Validation Result
+ ↓
+Controller
+```
+
+---
+
+## 5.6 Auth Routes
+
+```text
+src/routes/auth.routes.js
+```
+
+مثلاً:
+
+```text
+POST /register
+POST /login
+GET  /me
+POST /logout
+```
+
+---
+
+## 5.7 إضافة Auth إلى app.js
+
+**فقط بعد ما نخلص كل اللي فوق.**
+
+```text
+auth.routes.js
+      ↓
+app.js
+      ↓
+/api/v1/auth
+```
+
+يعني:
+
+```text
+app.use("/api/v1/auth", authRoutes)
+```
+
+وهنا لأول مرة نركب Module كامل في `app.js`.
+
+---
+
+# Phase 6 — Users
+
+دلوقتي نشتغل User Module.
+
+### 6.1 Repository
+
+```text
+user.repository.js
+```
+
+لو احتجنا نضيف عليه:
+
+```text
+updateUser
+deleteUser
+getUser
+```
+
+### 6.2 Service
+
+```text
+user.service.js
+```
+
+### 6.3 Controller
+
+```text
+user.controller.js
+```
+
+### 6.4 Validator
+
+```text
+user.validator.js
+```
+
+### 6.5 Route
+
+```text
+user.routes.js
+```
+
+### 6.6 Middleware
+
+نستخدم الموجود:
+
+```text
+auth.middleware.js
+```
+
+وللـadmin:
+
+```text
+role.middleware.js
+```
+
+### 6.7 app.js
+
+بعد انتهاء الـUser module:
+
+```text
+app.use("/api/v1/users", userRoutes)
+```
+
+---
+
+# Phase 7 — Categories
+
+نفس النظام.
+
+## 7.1 Database
+
+الـTable أصلًا اتعمل في Phase 3.
+
+دلوقتي نعمل:
+
+```text
+category.repository.js
+category.service.js
+category.controller.js
+category.validator.js
+category.routes.js
+```
+
+### Flow
+
+```text
+Database
+   ↓
+Repository
+   ↓
+Service
+   ↓
+Controller
+   ↓
+Validator
+   ↓
+Route
+   ↓
+app.js
+```
+
+والـAdmin routes تستخدم:
+
+```text
+auth.middleware
++
+role.middleware
+```
+
+---
+
+# Phase 8 — Products
+
+دي المرحلة اللي أنت بتتكلم عنها تحديدًا.
+
+هنعملها **كاملة قبل ما نروح لأي Module بعدها.**
+
+## 8.1 Product Repository
+
+```text
+src/repositories/product.repository.js
+```
+
+هنا SQL الخاص بـ:
+
+```text
+createProduct
+getProducts
+getProductById
+updateProduct
+deleteProduct
+```
+
+وبعدين:
+
+```text
+filterProducts
+searchProducts
+```
+
+---
+
+## 8.2 Product Service
+
+```text
+src/services/product.service.js
+```
+
+هنا:
+
+```text
+check category
+business rules
+create
+update
+delete
+filter
+search
+```
+
+---
+
+## 8.3 Product Controller
+
+```text
+src/controllers/product.controller.js
+```
+
+يحتوي:
+
+```text
+createProduct
+getProducts
+getProduct
+updateProduct
+deleteProduct
+```
+
+---
+
+## 8.4 Product Validator
+
+```text
+src/validators/product.validator.js
+```
+
+مثلاً:
+
+```text
+createProductValidator
+updateProductValidator
+productIdValidator
+queryValidator
+```
+
+---
+
+## 8.5 Product Routes
+
+```text
+src/routes/product.routes.js
+```
+
+Public:
+
+```text
+GET /products
+GET /products/:id
+```
+
+Admin:
+
+```text
+POST   /products
+PATCH  /products/:id
+DELETE /products/:id
+```
+
+---
+
+## 8.6 Middleware
+
+هنا تسأل:
+
+> هل الـProduct محتاج Middleware؟
+
+الإجابة:
+
+### GET
+
+```text
+GET /products
+GET /products/:id
+```
+
+لا يحتاج Authentication لو الـproducts public.
+
+### POST/PATCH/DELETE
+
+يحتاج:
+
+```text
+auth.middleware
+        ↓
+role.middleware("admin")
+```
+
+يعني:
+
+```text
+POST /products
+      ↓
+authenticate
+      ↓
+authorize admin
+      ↓
+validate
+      ↓
+controller
+```
+
+---
+
+## 8.7 app.js
+
+**بعد ما نخلص Product بالكامل:**
+
+```text
+app.use("/api/v1/products", productRoutes)
+```
+
+ثم نختبر:
+
+```text
+GET
+POST
+PATCH
+DELETE
+```
+
+---
+
+# Phase 9 — Addresses
+
+```text
+address.repository.js
+address.service.js
+address.controller.js
+address.validator.js
+address.routes.js
+```
+
+والـmiddleware:
+
+```text
+authenticate
+```
+
+لأن كل Address تخص User.
+
+الـflow:
+
+```text
+JWT
+ ↓
+req.user.id
+ ↓
+Address belongs to user
+```
+
+---
+
+# Phase 10 — Cart
+
+هنا مهم جدًا نفصل:
+
+```text
+Cart
+Cart Items
+```
+
+لكن في الـBackend Module ممكن يكونوا Module واحد:
+
+```text
+cart.repository.js
+cart.service.js
+cart.controller.js
+cart.validator.js
+cart.routes.js
+```
+
+الـService:
+
+```text
+add item
+ ↓
+check product
+ ↓
+check availability
+ ↓
+check quantity
+ ↓
+insert/update cart item
+```
+
+Middleware:
+
+```text
+authenticate
+```
+
+لأن Cart خاص بالـUser.
+
+ثم:
+
+```text
+app.use("/api/v1/cart", cartRoutes)
+```
+
+---
+
+# Phase 11 — Orders + Transactions
+
+**دي أكبر مرحلة في المشروع.**
+
+هنا نعمل:
+
+```text
+order.repository.js
+order.service.js
+order.controller.js
+order.validator.js
+order.routes.js
+```
+
+لكن الـService هيحتوي Transaction.
+
+الـflow:
+
+```text
+POST /orders
+       ↓
+Authentication
+       ↓
+Validation
+       ↓
+Order Service
+       ↓
+BEGIN
+       ↓
+Get Cart
+       ↓
+Get Products
+       ↓
+Check Stock
+       ↓
+Calculate Subtotal
+       ↓
+Apply Coupon
+       ↓
+Create Order
+       ↓
+Create Order Items
+       ↓
+Decrease Stock
+       ↓
+Clear Cart
+       ↓
+COMMIT
+```
+
+وفي حالة Error:
+
+```text
+ROLLBACK
+```
+
+---
+
+# Phase 12 — Payments
+
+نعمل:
+
+```text
+payment.repository.js
+payment.service.js
+payment.controller.js
+payment.validator.js
+payment.routes.js
+```
+
+في البداية:
+
+```text
+cash
+```
+
+ونعمل Payment record مربوط بالـOrder.
+
+Middleware:
+
+```text
+authenticate
+```
+
+---
+
+# Phase 13 — Coupons
+
+نعمل:
+
+```text
+coupon.repository.js
+coupon.service.js
+coupon.controller.js
+coupon.validator.js
+coupon.routes.js
+```
+
+والـAdmin:
+
+```text
+create coupon
+update coupon
+delete/deactivate coupon
+```
+
+والـCustomer:
+
+```text
+apply coupon
+```
+
+والـCoupon يدخل جوه Transaction بتاعة Order.
+
+---
+
+# Phase 14 — Reviews
+
+نعمل:
+
+```text
+review.repository.js
+review.service.js
+review.controller.js
+review.validator.js
+review.routes.js
+```
+
+Customer:
+
+```text
+Create
+Update
+Delete
+```
+
+Public:
+
+```text
+Get reviews
+```
+
+ونتحقق إن:
+
+```text
+rating BETWEEN 1 AND 5
+```
+
+وممكن نتحقق Business Logic إن العميل اشترى المنتج قبل ما يسمح له يعمل Review.
+
+---
+
+# Phase 15 — Advanced SQL + Indexes
+
+هنا **مش هنضيف Feature جديدة بالضرورة**.
+
+هنبدأ نرجع للـDatabase اللي بنيناها.
+
+نعمل:
+
+```text
+src/database/queries/
+```
+
+مثلاً:
+
+```text
+dashboard.sql
+product-analytics.sql
+customer-analytics.sql
+order-analytics.sql
+```
+
+ونطبق:
+
+```text
+JOIN
+GROUP BY
+HAVING
+CASE
+COALESCE
+CTE
+Subqueries
+Window Functions
+Views
+```
+
+ثم:
+
+```text
+EXPLAIN ANALYZE
+```
+
+ونضيف:
+
+```text
+Indexes
+```
+
+حسب الـqueries الفعلية.
+
+مثلاً:
+
+```text
+products(category_id)
+orders(user_id)
+orders(created_at)
+order_items(order_id)
+reviews(product_id)
+```
+
+ومش هنحط Index لمجرد إننا نقدر نحطه.
+
+---
+
+# Phase 16 — Testing
+
+وهنا أصحح النقطة: **بما إنك قلت "لحد Step 15 Testing"، يبقى نعتبر Testing هو Step 15، والـAdvanced SQL/Indexes يكون جزء من المراحل السابقة/الموازية، مش Step منفصلة بعده.**
+
+الترتيب النهائي عندنا يبقى:
+
+```text
+1  Project Setup
+2  PostgreSQL Connection
+3  Database Schema
+4  Authentication & Authorization
+5  Auth Module
+6  Users Module
+7  Categories Module
+8  Products Module
+9  Addresses Module
+10 Cart Module
+11 Orders + Transactions
+12 Payments
+13 Coupons
+14 Reviews + Advanced Database Work
+15 Testing
+```
+
+وده أنسب ترتيب ليك.
+
+---
+
+# الـFinal Structure اللي هتوصل له
+
+```text
+ecommerce-postgres-api/
+│
+├── src/
+│   │
+│   ├── config/
+│   │   ├── env.js   ✅
+│   │   └── db.js     ✅
+│   │
+│   ├── controllers/
+│   │   ├── auth.controller.js✅
+│   │   ├── user.controller.js✅
+│   │   ├── category.controller.js✅
+│   │   ├── product.controller.js✅
+│   │   ├── address.controller.js✅
+│   │   ├── cart.controller.js✅
+│   │   ├── order.controller.js
+│   │   ├── payment.controller.js
+│   │   ├── coupon.controller.js
+│   │   └── review.controller.js
+│   │
+│   │
+│   ├── repositories/
+│   │   ├── user.repository.js✅
+│   │   ├── category.repository.js✅
+│   │   ├── product.repository.js✅
+│   │   ├── address.repository.js✅
+│   │   ├── cart.repository.js✅
+│   │   ├── order.repository.js✅
+│   │   ├── payment.repository.js
+│   │   ├── coupon.repository.js
+│   │   └── review.repository.js
+│   │
+│   ├── routes/
+│   │   ├── auth.routes.js✅
+│   │   ├── user.routes.js✅
+│   │   ├── category.routes.js✅
+│   │   ├── product.routes.js✅
+│   │   ├── address.routes.js✅
+│   │   ├── cart.routes.js✅
+│   │   ├── order.routes.js✅
+│   │   ├── payment.routes.js
+│   │   ├── coupon.routes.js
+│   │   └── review.routes.js
+│   │
+│   ├── validators/
+│   │   ├── auth.validator.js✅
+│   │   ├── user.validator.js✅
+│   │   ├── category.validator.js✅
+│   │   ├── product.validator.js✅
+│   │   ├── address.validator.js✅
+│   │   ├── cart.validator.js✅
+│   │   ├── order.validator.js✅
+│   │   ├── payment.validator.js
+│   │   ├── coupon.validator.js
+│   │   └── review.validator.js
+│   │
+│   ├── middlewares/
+│   │   ├── auth.middleware.js✅
+│   │   ├── role.middleware.js✅
+│   │   ├── validate.middleware.js✅
+│   │   ├── error.middleware.js✅
+│   │   ├── notFound.middleware.js
+│   │   └── rateLimit.middleware.js✅
+│   │
+│   ├── utils/
+│   │   ├── ApiError.js✅
+│   │   ├── asyncHandler.js✅
+│   │   ├── jwt.js ✅
+│   │   ├── password.js✅
+│   │   ├── pagination.js
+│   │   └── response.js
+│   │
+│   ├── database/
+│   │   ├── migrations/✅
+│   │   ├── seeds/
+│   │   ├── queries/
+│   │   └── views/
+│   │
+│   ├── app.js
+│   └── server.js
+│
+├── tests/
+│   ├── unit/
+│   ├── integration/
+│   └── fixtures/
+│
+├── docs/
+│   ├── database/
+│   │   ├── erd.png
+│   │   ├── schema.md
+│   │   └── relationships.md
+│   │
+│   └── api/
+│       └── openapi.yaml
+│
+├── .env
+├── .env.example
+├── .gitignore
+├── package.json
+└── README.md
+```
+
+## والطريقة اللي هنشتغل بيها من هنا
+
+مش هقولك:
+
+> "اعمل Product Controller وخلاص."
+
+لأ.
+
+لما نوصل **Products**، هقولك حرفيًا:
+
+```text
+PRODUCT MODULE
+
+1. افتح:
+   src/repositories/product.repository.js
+
+2. اعمل:
+   createProduct()
+
+3. اعمل:
+   getProducts()
+
+4. اعمل:
+   getProductById()
+
+5. افتح:
+   src/services/product.service.js
+
+6. اعمل:
+   createProductService()
+
+7. ...
+
+8. افتح:
+   src/validators/product.validator.js
+
+9. ...
+
+10. افتح:
+    src/controllers/product.controller.js
+
+11. ...
+
+12. افتح:
+    src/routes/product.routes.js
+
+13. ...
+
+14. أضف middleware هنا:
+    auth.middleware
+    role.middleware
+
+15. بعد انتهاء كل Product Module:
+    افتح app.js
+
+16. أضف:
+    /api/v1/products
+
+17. شغّل السيرفر
+
+18. اختبر الـEndpoints
+```
+
+يعني **هنبني كل Module من الـDatabase → Repository → Service → Validator → Controller → Middleware → Route → `app.js` → Testing**، وبعد ما الـModule يشتغل ننتقل للي بعده.
+
+وده بالضبط الأسلوب المناسب ليك لأنك حاليًا بتتعلم **Node.js + Express + PostgreSQL مع بعض**؛ فمش هنتعامل مع المشروع كـ"انسخ Structure وخلاص"، لكن كل ملف هيكون له سبب ومكان واضح في الـrequest flow.
